@@ -1,0 +1,28 @@
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "postgresql" url = env("DATABASE_URL") }
+
+enum RoleName { SUPER_ADMIN ADMIN COUNSELLOR INSTITUTION STUDENT }
+enum LeadStatus { NEW CONTACTED QUALIFIED CONVERTED CLOSED }
+enum DeliveryMode { ONLINE OFFLINE HYBRID }
+
+model User { id String @id @default(cuid()) email String @unique name String? phone String? role Role @relation(fields:[roleId], references:[id]) roleId String leads Lead[] @relation("AssignedCounsellor") applications Application[] createdAt DateTime @default(now()) updatedAt DateTime @updatedAt }
+model Role { id String @id @default(cuid()) name RoleName @unique users User[] }
+model Institution { id String @id @default(cuid()) name String slug String @unique type String location String country String accreditation String? description String? courses Course[] events Event[] jobs Job[] reviews Review[] leads Lead[] caseStudies CaseStudy[] createdAt DateTime @default(now()) }
+model Course { id String @id @default(cuid()) name String slug String @unique category String duration String eligibility String fees Decimal @db.Decimal(12,2) mode DeliveryMode institution Institution @relation(fields:[institutionId], references:[id]) institutionId String }
+model School { id String @id @default(cuid()) name String slug String @unique board String location String fees Decimal @db.Decimal(12,2) facilities Json boarding Boolean @default(false) }
+model Coaching { id String @id @default(cuid()) name String slug String @unique exam String location String mode DeliveryMode fees Decimal @db.Decimal(12,2) faculty Json }
+model Edtech { id String @id @default(cuid()) name String slug String @unique categories Json certification String? placementSupport Boolean @default(false) }
+model Country { id String @id @default(cuid()) name String @unique code String @unique institutionsCount Int @default(0) }
+model Event { id String @id @default(cuid()) title String slug String @unique category String date DateTime location String mode DeliveryMode organizer Institution? @relation(fields:[organizerId], references:[id]) organizerId String? capacity Int? registrations EventRegistration[] }
+model EventRegistration { id String @id @default(cuid()) event Event @relation(fields:[eventId], references:[id]) eventId String userId String? name String email String attendance Boolean @default(false) certificateUrl String? feedback String? createdAt DateTime @default(now()) }
+model Job { id String @id @default(cuid()) title String company Institution? @relation(fields:[companyId], references:[id]) companyId String? location String type String skills Json applications Application[] }
+model Internship { id String @id @default(cuid()) company String role String domain String duration String stipend Decimal @db.Decimal(10,2) skills Json eligibility String applications Application[] }
+model Project { id String @id @default(cuid()) title String category String skills Json budget Decimal @db.Decimal(12,2) duration String applications Application[] }
+model Application { id String @id @default(cuid()) user User @relation(fields:[userId], references:[id]) userId String job Job? @relation(fields:[jobId], references:[id]) jobId String? internship Internship? @relation(fields:[internshipId], references:[id]) internshipId String? project Project? @relation(fields:[projectId], references:[id]) projectId String? status String @default("SUBMITTED") createdAt DateTime @default(now()) }
+model Lead { id String @id @default(cuid()) name String phone String email String? location String? interestCategory String sourcePage String region String? intent String? status LeadStatus @default(NEW) institution Institution? @relation(fields:[institutionId], references:[id]) institutionId String? assignedCounsellor User? @relation("AssignedCounsellor", fields:[assignedCounsellorId], references:[id]) assignedCounsellorId String? notes String? activities LeadActivity[] createdAt DateTime @default(now()) updatedAt DateTime @updatedAt }
+model LeadActivity { id String @id @default(cuid()) lead Lead @relation(fields:[leadId], references:[id]) leadId String action String notes String? actorId String? createdAt DateTime @default(now()) }
+model Article { id String @id @default(cuid()) title String slug String @unique type String content String publishedAt DateTime? }
+model CaseStudy { id String @id @default(cuid()) title String slug String @unique summary String metrics Json institution Institution? @relation(fields:[institutionId], references:[id]) institutionId String? }
+model Review { id String @id @default(cuid()) rating Int comment String institution Institution @relation(fields:[institutionId], references:[id]) institutionId String authorId String createdAt DateTime @default(now()) }
+model Shortlist { id String @id @default(cuid()) userId String entityType String entityId String createdAt DateTime @default(now()) @@unique([userId,entityType,entityId]) }
+model Comparison { id String @id @default(cuid()) userId String? entityType String entityIds Json createdAt DateTime @default(now()) }
