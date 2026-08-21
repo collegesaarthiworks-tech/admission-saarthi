@@ -30,7 +30,7 @@ export function HomePage() {
         <a href="#discover">Explore <ChevronDown size={14}/></a><a href="/study-abroad">Study Abroad</a><a href="#events">Events</a><a href="#career">Career</a><a href="#growth">For Institutions</a>
       </nav>
       <button className="iconButton mobileMenu" onClick={() => setMenu(!menu)} aria-label="Toggle menu">{menu ? <X/> : <Menu/>}</button>
-      <button className="signIn"><CircleUserRound size={17}/> Sign in</button>
+      <a className="signIn" href="/admin/onboarding"><CircleUserRound size={17}/> Partner panel</a>
     </header>
 
     <section className="hero" id="top">
