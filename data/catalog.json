@@ -1,0 +1,114 @@
+{
+  "providers": [],
+  "caseStudies": [
+    {
+      "id": "case-bbs-degree-college",
+      "clientName": "B.B.S. Degree College",
+      "clientType": "College",
+      "title": "Branding and local admission lead generation",
+      "challenge": "Improve local visibility and communicate the college's academic and infrastructure strengths.",
+      "solution": "Brand positioning, digital marketing and targeted admissions outreach for the Lucknow market.",
+      "outcome": "A stronger local admissions presence and an organised lead-generation programme.",
+      "metrics": [],
+      "image": "/case-studies/bbs-degree-college.png",
+      "associatePartner": false,
+      "published": true
+    },
+    {
+      "id": "case-itm-sims",
+      "clientName": "ITM & SIMS, Dehradun",
+      "clientType": "College",
+      "title": "Admission-focused lead generation",
+      "challenge": "Generate relevant admission enquiries in a competitive higher-education market.",
+      "solution": "Targeted digital outreach highlighting academics and campus facilities.",
+      "outcome": "A structured lead funnel focused on conversion into admissions.",
+      "metrics": [],
+      "image": "/case-studies/itm-sims.png",
+      "associatePartner": false,
+      "published": true
+    },
+    {
+      "id": "case-makoons",
+      "clientName": "Makoons World School",
+      "clientType": "School",
+      "title": "Building a consistent social presence",
+      "challenge": "The school needed a stronger and more consistent social-media presence.",
+      "solution": "Content planning, creative communication and profile development around school activities and admissions.",
+      "outcome": "A clearer digital identity for parents discovering the school online.",
+      "metrics": [],
+      "image": "/case-studies/makoons.jpg",
+      "associatePartner": false,
+      "published": true
+    },
+    {
+      "id": "case-junior-dps",
+      "clientName": "Junior Delhi Public School, Patna",
+      "clientType": "School",
+      "title": "School social-media positioning",
+      "challenge": "Limited visibility and an underdeveloped social-media presence.",
+      "solution": "Structured content and brand communication designed for parents and local discovery.",
+      "outcome": "A more active and recognisable digital presence.",
+      "metrics": [],
+      "image": "/case-studies/junior-dps.jpg",
+      "associatePartner": false,
+      "published": true
+    },
+    {
+      "id": "case-ojha-classes",
+      "clientName": "Ojha's Classes",
+      "clientType": "Coaching",
+      "title": "Coaching lead generation and social media",
+      "challenge": "Build a repeatable stream of coaching enquiries while improving online visibility.",
+      "solution": "Lead-generation campaigns supported by ongoing social-media activity.",
+      "outcome": "A combined visibility and enquiry-generation programme.",
+      "metrics": [],
+      "image": "/case-studies/ojha-classes.jpg",
+      "associatePartner": false,
+      "published": true
+    },
+    {
+      "id": "case-motion-classes",
+      "clientName": "My Biz Kid by Motion Classes",
+      "clientType": "Coaching",
+      "title": "Content marketing and lead generation",
+      "challenge": "Support awareness and enquiry generation for the learning programme.",
+      "solution": "Content marketing and performance-led admissions outreach.",
+      "outcome": "A coordinated content and lead-generation engagement.",
+      "metrics": [],
+      "image": "/case-studies/motion-classes.jpg",
+      "associatePartner": true,
+      "published": true
+    },
+    {
+      "id": "case-edtech-growth",
+      "clientName": "CIY, Thinklance & Corizo",
+      "clientType": "EdTech",
+      "title": "Opening an untapped EdTech audience funnel",
+      "challenge": "Course conversion relied heavily on personal BDE relationships while new-audience discovery was weak.",
+      "solution": "Audience research, brand-visibility campaigns and advertising to reach previously untapped learners.",
+      "outcome": "The portfolio reports 2,500 leads generated and 300 conversions.",
+      "metrics": [
+        "2,500 leads",
+        "300 conversions"
+      ],
+      "image": "/case-studies/edtech-growth.jpg",
+      "associatePartner": false,
+      "published": true
+    },
+    {
+      "id": "case-krutanic",
+      "clientName": "Krutanic",
+      "clientType": "EdTech",
+      "title": "Improving creative quality and lead relevance",
+      "challenge": "The EdTech company reported difficulty attracting quality leads.",
+      "solution": "High-appeal campaign creatives designed to strengthen the brand's digital image.",
+      "outcome": "The portfolio reports 100 leads, with a referenced 1:10 industry conversion standard.",
+      "metrics": [
+        "100 leads generated"
+      ],
+      "image": "/case-studies/krutanic.jpg",
+      "associatePartner": false,
+      "published": true
+    }
+  ]
+}

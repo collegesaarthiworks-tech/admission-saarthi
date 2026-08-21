@@ -3,15 +3,14 @@
 import {
   ArrowLeft, Building2, Check, CheckCircle2, ChevronRight, CircleUserRound,
   ClipboardCheck, Eye, FileImage, GraduationCap, LayoutDashboard, Menu,
-  Pencil, Plus, Save, Search, Send, Trash2, Upload, X,
+  Pencil, Plus, Save, Search, Send, ShieldCheck, Trash2, Upload, X,
 } from "lucide-react";
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import styles from "./onboarding.module.css";
+import backend from "./onboarding-backend.module.css";
 
-const ENTITY_TYPES = ["College", "University", "School", "Coaching", "EdTech", "School of AI"] as const;
+const ENTITY_TYPES = ["College", "University", "Course", "Medical", "School", "Coaching", "EdTech", "School of AI"] as const;
 const ROLES = ["Admission Saarthi team", "Channel partner", "Institution representative"] as const;
-const STORAGE_KEY = "admission-saarthi-onboarding-v1";
-
 type EntityType = typeof ENTITY_TYPES[number];
 type Role = typeof ROLES[number];
 type Status = "Draft" | "In review" | "Published";
@@ -43,6 +42,7 @@ type Listing = {
   status: Status;
   updatedAt: string;
 };
+type CaseStudy = { id:string; clientName:string; clientType:EntityType; title:string; challenge:string; solution:string; outcome:string; metrics:string[]; image:string; associatePartner:boolean; published:boolean };
 
 const blankListing = (role: Role): Listing => ({
   id: "", type: "College", name: "", email: "", phone: "", website: "", city: "", state: "",
@@ -56,6 +56,8 @@ const steps: Step[] = ["Basics", "Academics", "Media", "Review"];
 const fieldMeta: Record<EntityType, { credential: string; programs: string; placeholder: string }> = {
   College: { credential: "Accreditation / affiliation", programs: "Courses and programs", placeholder: "MBA\nB.Tech Computer Science\nBBA" },
   University: { credential: "Accreditation / recognition", programs: "Degrees and programs", placeholder: "MBA\nM.Sc Data Science\nPhD Management" },
+  Course: { credential: "Awarding body / certification", programs: "Course modules and pathways", placeholder: "Foundation module\nCore specialisation\nCapstone project" },
+  Medical: { credential: "Medical recognition / affiliation", programs: "Medical programs", placeholder: "MBBS\nBDS\nMD Medicine" },
   School: { credential: "Board", programs: "Grades and streams", placeholder: "Nursery to Grade 12\nScience\nCommerce" },
   Coaching: { credential: "Exam categories", programs: "Batches and programs", placeholder: "JEE Main + Advanced\nNEET Foundation\nDropper batch" },
   EdTech: { credential: "Certification / partners", programs: "Online courses", placeholder: "Full Stack Development\nData Science\nDigital Marketing" },
@@ -78,17 +80,18 @@ export default function OnboardingPanel() {
   const [showEditor, setShowEditor] = useState(true);
   const [mobileNav, setMobileNav] = useState(false);
   const [notice, setNotice] = useState("");
+  const [adminKey, setAdminKey] = useState("");
+  const [caseStudies, setCaseStudies] = useState<CaseStudy[]>([]);
+  const [caseForm, setCaseForm] = useState<CaseStudy>({ id:"", clientName:"", clientType:"College", title:"", challenge:"", solution:"", outcome:"", metrics:[], image:"", associatePartner:false, published:true });
 
   useEffect(() => {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      try { setListings(JSON.parse(raw)); } catch { /* Ignore invalid local drafts. */ }
-    }
+    const key = window.sessionStorage.getItem("admission-saarthi-admin-key") || "";
+    setAdminKey(key);
+    fetch("/api/catalog?manage=1", { cache:"no-store", headers: key ? { "x-admin-key":key } : {} }).then(async response => {
+      if (!response.ok) throw new Error("Enter the Hostinger ONBOARDING_ADMIN_KEY to manage listings.");
+      return response.json();
+    }).then(data => { setListings(data.providers || []); setCaseStudies(data.caseStudies || []); }).catch(error => setNotice(error.message));
   }, []);
-
-  useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(listings));
-  }, [listings]);
 
   const progress = completion(form);
   const meta = fieldMeta[form.type];
@@ -99,23 +102,26 @@ export default function OnboardingPanel() {
 
   const update = (key: keyof Listing, value: string) => setForm(current => ({ ...current, [key]: value }));
 
-  const handleMedia = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleMedia = async (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? []);
     const next = files.map(file => ({ name: file.name, type: file.type, url: URL.createObjectURL(file) }));
     setMedia(current => [...current, ...next].slice(0, 8));
-    setForm(current => ({ ...current, mediaNames: [...current.mediaNames, ...files.map(file => file.name)].slice(0, 8) }));
+    try { const urls:string[]=[]; for(const file of files){const body=new FormData();body.append("file",file);const response=await fetch("/api/uploads",{method:"POST",headers:adminKey?{"x-admin-key":adminKey}:{},body});const saved=await response.json();if(!response.ok)throw new Error(saved.error||"Upload failed");urls.push(saved.url)}setForm(current=>({...current,mediaNames:[...current.mediaNames,...urls].slice(0,8)}));setNotice("Media uploaded to the shared server.")}catch(error){setNotice(error instanceof Error?error.message:"Media upload failed")}
   };
 
-  const persist = (status: Status) => {
+  const persist = async (status: Status) => {
     if (!form.name.trim()) {
       setStep("Basics");
       setNotice("Add the institution name before saving.");
       return;
     }
-    const item = { ...form, id: form.id || crypto.randomUUID(), ownerRole: role, status, updatedAt: new Date().toISOString() };
-    setListings(current => [item, ...current.filter(entry => entry.id !== item.id)]);
-    setForm(item);
-    setNotice(status === "Draft" ? "Draft saved on this device." : status === "Published" ? "Listing published." : "Listing sent for review.");
+    const item = { ...form, ownerRole: role, status, updatedAt: new Date().toISOString() };
+    try {
+      const response = await fetch("/api/catalog", { method:"POST", headers:{ "Content-Type":"application/json", ...(adminKey ? { "x-admin-key":adminKey } : {}) }, body:JSON.stringify({ kind:"provider", record:item }) });
+      const saved = await response.json(); if (!response.ok) throw new Error(saved.error || "Unable to save listing");
+      setListings(current => [saved, ...current.filter(entry => entry.id !== saved.id)]); setForm(saved);
+      setNotice(status === "Draft" ? "Draft saved to the shared server." : status === "Published" ? "Listing published to the public directory." : "Listing sent to the shared review queue.");
+    } catch (error) { setNotice(error instanceof Error ? error.message : "Unable to save listing"); }
   };
 
   const newListing = () => {
@@ -134,9 +140,18 @@ export default function OnboardingPanel() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const removeListing = (id: string) => {
+  const removeListing = async (id: string) => {
+    const response = await fetch(`/api/catalog?id=${encodeURIComponent(id)}`, { method:"DELETE", headers: adminKey ? { "x-admin-key":adminKey } : {} });
+    if (!response.ok) { setNotice("Unable to remove listing."); return; }
     setListings(current => current.filter(item => item.id !== id));
     if (form.id === id) newListing();
+  };
+
+  const saveCaseStudy = async () => {
+    if (!caseForm.clientName || !caseForm.title || !caseForm.outcome) { setNotice("Add the client name, case-study title and outcome."); return; }
+    const response = await fetch("/api/catalog", { method:"POST", headers:{ "Content-Type":"application/json", ...(adminKey ? { "x-admin-key":adminKey } : {}) }, body:JSON.stringify({ kind:"caseStudy", record:caseForm }) });
+    const saved = await response.json(); if (!response.ok) { setNotice(saved.error || "Unable to save case study"); return; }
+    setCaseStudies(current => [saved, ...current.filter(item => item.id !== saved.id)]); setCaseForm({ id:"", clientName:"", clientType:"College", title:"", challenge:"", solution:"", outcome:"", metrics:[], image:"", associatePartner:false, published:true }); setNotice("Case study saved to the shared server.");
   };
 
   return (
@@ -149,6 +164,7 @@ export default function OnboardingPanel() {
           <button className={styles.navActive}><LayoutDashboard /> Onboarding</button>
           <button><Building2 /> All listings <span>{listings.length}</span></button>
           <button><ClipboardCheck /> Review queue <span>{listings.filter(item => item.status === "In review").length}</span></button>
+          <button onClick={() => document.getElementById("case-study-manager")?.scrollIntoView({behavior:"smooth"})}><FileImage /> Case studies <span>{caseStudies.length}</span></button>
         </nav>
         <div className={styles.sidebarHelp}>
           <strong>Need onboarding help?</strong>
@@ -178,6 +194,7 @@ export default function OnboardingPanel() {
             <div><span>Awaiting review</span><strong>{listings.filter(item => item.status === "In review").length}</strong></div>
             <div><span>Published</span><strong>{listings.filter(item => item.status === "Published").length}</strong></div>
           </div>
+          <div className={backend.apiKeyRow}><div><ShieldCheck /><span><strong>Backend access</strong><small>Use the same ONBOARDING_ADMIN_KEY configured in Hostinger.</small></span></div><input type="password" value={adminKey} onChange={event => { setAdminKey(event.target.value); window.sessionStorage.setItem("admission-saarthi-admin-key", event.target.value); }} placeholder="Admin key (optional until configured)" /></div>
 
           {showEditor && <section className={styles.editor}>
             <div className={styles.editorHead}>
@@ -276,6 +293,27 @@ export default function OnboardingPanel() {
             <div className={styles.tableWrap}>
               {filtered.length ? <table><thead><tr><th>Provider</th><th>Type</th><th>Location</th><th>Complete</th><th>Status</th><th aria-label="Actions" /></tr></thead><tbody>{filtered.map(item => <tr key={item.id}><td><strong>{item.name}</strong><span>{item.email || "No email added"}</span></td><td>{item.type}</td><td>{[item.city, item.country].filter(Boolean).join(", ") || "Not added"}</td><td><div className={styles.miniProgress}><i style={{ width: `${completion(item)}%` }} /></div><span>{completion(item)}%</span></td><td><span className={`${styles.status} ${styles[item.status.replace(" ", "").toLowerCase()]}`}>{item.status}</span></td><td><button onClick={() => editListing(item)} aria-label={`Edit ${item.name}`}><Pencil /></button><button onClick={() => removeListing(item.id)} aria-label={`Delete ${item.name}`}><Trash2 /></button></td></tr>)}</tbody></table> : <div className={styles.empty}><Building2 /><h3>No listings found</h3><p>Add the first education provider or change your filters.</p><button className={styles.primaryButton} onClick={newListing}><Plus /> Add provider</button></div>}
             </div>
+          </section>
+          <section className={styles.listSection} id="case-study-manager">
+            <div className={styles.listHead}><div><p>CASE STUDY MANAGEMENT</p><h2>Create client proof</h2></div><span>{caseStudies.length} saved</span></div>
+            <div className={backend.caseManager}>
+              <div className={backend.caseForm}>
+                <label>Client category<select value={caseForm.clientType} onChange={event=>setCaseForm(current=>({...current,clientType:event.target.value as EntityType}))}>{ENTITY_TYPES.map(type=><option key={type}>{type}</option>)}</select></label>
+                <label>Client<select value={caseForm.clientName} onChange={event=>setCaseForm(current=>({...current,clientName:event.target.value}))}><option value="">Select an onboarded client or type below</option>{listings.map(item=><option key={item.id} value={item.name}>{item.name}</option>)}</select></label>
+                <label>Client name<input value={caseForm.clientName} onChange={event=>setCaseForm(current=>({...current,clientName:event.target.value}))} placeholder="Official client name" /></label>
+                <label>Case-study title<input value={caseForm.title} onChange={event=>setCaseForm(current=>({...current,title:event.target.value}))} placeholder="What work was delivered?" /></label>
+                <label className={backend.full}>Challenge<textarea value={caseForm.challenge} onChange={event=>setCaseForm(current=>({...current,challenge:event.target.value}))} rows={3} placeholder="What problem did the client face?" /></label>
+                <label className={backend.full}>Solution<textarea value={caseForm.solution} onChange={event=>setCaseForm(current=>({...current,solution:event.target.value}))} rows={3} placeholder="What work was delivered?" /></label>
+                <label className={backend.full}>Outcome<textarea value={caseForm.outcome} onChange={event=>setCaseForm(current=>({...current,outcome:event.target.value}))} rows={3} placeholder="Use only verified outcomes and metrics." /></label>
+                <label>Metrics<input value={caseForm.metrics.join(", ")} onChange={event=>setCaseForm(current=>({...current,metrics:event.target.value.split(",").map(item=>item.trim()).filter(Boolean)}))} placeholder="2,500 leads, 300 conversions" /></label>
+                <label>Logo or photo URL<input value={caseForm.image} onChange={event=>setCaseForm(current=>({...current,image:event.target.value}))} placeholder="/case-studies/client-image.jpg" /></label>
+                <label className={backend.checkLabel}><input type="checkbox" checked={caseForm.associatePartner} onChange={event=>setCaseForm(current=>({...current,associatePartner:event.target.checked}))}/> Work involved an associate partner agency</label>
+                <label className={backend.checkLabel}><input type="checkbox" checked={caseForm.published} onChange={event=>setCaseForm(current=>({...current,published:event.target.checked}))}/> Publish in public case studies</label>
+                <button className={styles.primaryButton} onClick={saveCaseStudy}><Save /> Save case study</button>
+              </div>
+              <div className={backend.caseList}>{caseStudies.map(item=><article key={item.id}>{item.image?<img src={item.image} alt=""/>:<FileImage/>}<div><span>{item.clientType}</span><strong>{item.clientName}</strong><p>{item.title}</p>{item.associatePartner&&<small>* Includes work delivered with an associate partner agency.</small>}</div><button onClick={()=>setCaseForm(item)} aria-label={`Edit ${item.clientName}`}><Pencil/></button></article>)}</div>
+            </div>
+            <p className={backend.partnerFootnote}>* Some portfolio work was delivered with support from our associate partner agency.</p>
           </section>
         </div>
       </section>

@@ -1,0 +1,6 @@
+import { promises as fs } from "node:fs";
+import path from "node:path";
+import { NextRequest, NextResponse } from "next/server";
+export const dynamic = "force-dynamic";
+const allowed = new Set(["image/jpeg", "image/png", "image/webp", "video/mp4"]);
+export async function POST(request: NextRequest) { const configured=process.env.ONBOARDING_ADMIN_KEY;if(configured&&request.headers.get("x-admin-key")!==configured)return NextResponse.json({error:"Invalid admin key"},{status:401});const data=await request.formData();const file=data.get("file");if(!(file instanceof File))return NextResponse.json({error:"Missing file"},{status:400});if(!allowed.has(file.type))return NextResponse.json({error:"Unsupported file type"},{status:415});if(file.size>20*1024*1024)return NextResponse.json({error:"File exceeds 20 MB"},{status:413});const extension=path.extname(file.name).toLowerCase().replace(/[^.a-z0-9]/g,"");const name=`${Date.now()}-${crypto.randomUUID()}${extension}`;const directory=path.join(process.cwd(),"public","uploads");await fs.mkdir(directory,{recursive:true});await fs.writeFile(path.join(directory,name),Buffer.from(await file.arrayBuffer()));return NextResponse.json({url:`/uploads/${name}`,name:file.name,type:file.type}); }
