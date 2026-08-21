@@ -25,9 +25,9 @@ export function HomePage() {
 
   return <main>
     <header className="siteHeader">
-      <a className="brand" href="#top" aria-label="Admission Saarthi home"><img src="/logo.png" alt="Admission Saarthi" /></a>
+      <a className="brand" href="#top" aria-label="Admission Saarthi home"><img src="/logo.png" alt="Admission Saarthi" style={{ transform: "translateY(-56px) scale(0.9)" }} /></a>
       <nav className={menu ? "nav open" : "nav"}>
-        <a href="#discover">Explore <ChevronDown size={14}/></a><a href="#abroad">Study Abroad</a><a href="#events">Events</a><a href="#career">Career</a><a href="#growth">For Institutions</a>
+        <a href="#discover">Explore <ChevronDown size={14}/></a><a href="/study-abroad">Study Abroad</a><a href="#events">Events</a><a href="#career">Career</a><a href="#growth">For Institutions</a>
       </nav>
       <button className="iconButton mobileMenu" onClick={() => setMenu(!menu)} aria-label="Toggle menu">{menu ? <X/> : <Menu/>}</button>
       <button className="signIn"><CircleUserRound size={17}/> Sign in</button>
@@ -55,7 +55,7 @@ export function HomePage() {
 
     <section className="metrics"><div><strong>4+</strong><span>Years Experience</span></div><div><strong>40+</strong><span>Institutions Served</span></div><div><strong>Multiple</strong><span>Education Domains</span></div><div><strong>AI</strong><span>Enabled Solutions</span></div></section>
 
-    <section className="section categories"><div className="sectionHead"><div><p>Explore education</p><h2>One platform, every learning path</h2></div><a href="#discover">View all categories <ArrowRight size={17}/></a></div><div className="categoryRail">{categories.map(([title,meta,Icon])=><button key={title} onClick={()=>{setTab(title.split(" ")[0]); document.getElementById("discover")?.scrollIntoView()}}><Icon/><strong>{title}</strong><span>{meta}</span><ArrowRight className="categoryArrow" size={17}/></button>)}</div></section>
+    <section className="section categories"><div className="sectionHead"><div><p>Explore education</p><h2>One platform, every learning path</h2></div><a href="#discover">View all categories <ArrowRight size={17}/></a></div><div className="categoryRail">{categories.map(([title,meta,Icon])=><button key={title} onClick={()=>{if(title === "Study Abroad"){window.location.href="/study-abroad";return;}setTab(title.split(" ")[0]); document.getElementById("discover")?.scrollIntoView()}}><Icon/><strong>{title}</strong><span>{meta}</span><ArrowRight className="categoryArrow" size={17}/></button>)}</div></section>
 
     <section className="aiSection"><div><h2>Meet AI Saarthi</h2><p>Your 24×7 education companion for personalised discovery, eligibility guidance, application support and career direction.</p><ul>{["Personalised college and course recommendations","Eligibility and documentation guidance","Scholarship and financial-aid assistance","Human counsellor escalation when needed"].map(x=><li key={x}><Check size={17}/>{x}</li>)}</ul><button className="button primary" onClick={()=>setChatOpen(true)}>Chat with AI Saarthi <ArrowRight size={18}/></button></div><div className="promptList"><span>Try asking</span>{["Which BBA colleges fit a ₹10 lakh budget?","What are my career options after B.Com?","Suggest scholarships for engineering students","How do I apply to universities in Canada?"].map(q=><button key={q} onClick={()=>{setChat(q);setChatOpen(true)}}><MessageCircle size={16}/>{q}<ArrowRight size={15}/></button>)}</div></section>
 
